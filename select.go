@@ -103,6 +103,43 @@ func (s *SelectStmt) Having(conditions ...string) *SelectStmt {
 	return s
 }
 
+// ClearSelect clears the selected columns in the SELECT statement.
+func (s *SelectStmt) ClearSelect() *SelectStmt {
+	s.columns = nil
+	return s
+}
+
+// ClearWhere clears the WHERE clause and its arguments in the SELECT statement.
+func (s *SelectStmt) ClearWhere() *SelectStmt {
+	s.where = nil
+	s.args = nil
+	return s
+}
+
+// ClearJoin clears the JOIN clauses in the SELECT statement.
+func (s *SelectStmt) ClearJoin() *SelectStmt {
+	s.joins = nil
+	return s
+}
+
+// ClearGroupBy clears the GROUP BY clause in the SELECT statement.
+func (s *SelectStmt) ClearGroupBy() *SelectStmt {
+	s.groupBy = ""
+	return s
+}
+
+// ClearHaving clears the HAVING clause in the SELECT statement.
+func (s *SelectStmt) ClearHaving() *SelectStmt {
+	s.having = ""
+	return s
+}
+
+// ClearOrderBy clears the ORDER BY clause in the SELECT statement.
+func (s *SelectStmt) ClearOrderBy() *SelectStmt {
+	s.orderBy = ""
+	return s
+}
+
 // ToSql generates the SQL query string and the corresponding arguments for the SELECT statement.
 func (s *SelectStmt) ToSql() (string, []any) {
 	var query string

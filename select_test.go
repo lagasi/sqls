@@ -68,4 +68,75 @@ func TestSelect(t *testing.T) {
 			t.Errorf("Invalid args: %v", args)
 		}
 	})
+
+	t.Run("clear", func(t *testing.T) {
+		query := From("users").
+			Select("id", "name", "email").
+			Join("roles", "users.id", "roles.user_id").
+			Where("active", true).
+			WhereIn("state", []any{"Washington", "Oregon"}).
+			WhereExp("dob", ">", time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)).
+			WhereNull("token").
+			WhereNotNull("sso").
+			WhereRaw("first=last").
+			OrderBy("id DESC").
+			Limit(20).Offset(100)
+
+		query.ClearOrderBy()
+		sql, args := query.ToSql()
+
+		if sql != `SELECT id,name,email FROM users JOIN roles ON users.id=roles.user_id WHERE active=$1 AND state IN ($2,$3) AND dob>$4 AND token IS NULL AND sso IS NOT NULL AND first=last LIMIT 20 OFFSET 100` {
+			t.Error("Invalid sql: " + sql)
+		}
+		if !reflect.DeepEqual(args, []any{true, "Washington", "Oregon", time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)}) {
+			t.Errorf("Invalid args: %v", args)
+		}
+
+		query.ClearWhere()
+		sql, args = query.ToSql()
+
+		if sql != `SELECT id,name,email FROM users JOIN roles ON users.id=roles.user_id LIMIT 20 OFFSET 100` {
+			t.Error("Invalid sql: " + sql)
+		}
+		if len(args) != 0 {
+			t.Errorf("Invalid args: %v", args)
+		}
+
+		query.ClearJoin()
+		sql, args = query.ToSql()
+		if sql != `SELECT id,name,email FROM users LIMIT 20 OFFSET 100` {
+			t.Error("Invalid sql: " + sql)
+		}
+		if len(args) != 0 {
+			t.Errorf("Invalid args: %v", args)
+		}
+
+		query.Limit(0)
+		query.Offset(0)
+		sql, args = query.ToSql()
+		if sql != `SELECT id,name,email FROM users` {
+			t.Error("Invalid sql: " + sql)
+		}
+		if len(args) != 0 {
+			t.Errorf("Invalid args: %v", args)
+		}
+
+		query.ClearSelect()
+		sql, args = query.ToSql()
+		if sql != `SELECT * FROM users` {
+			t.Error("Invalid sql: " + sql)
+		}
+		if len(args) != 0 {
+			t.Errorf("Invalid args: %v", args)
+		}
+
+		query.GroupBy("state").Having("COUNT(state) > 5").ClearGroupBy().ClearHaving()
+		sql, args = query.ToSql()
+		if sql != `SELECT * FROM users` {
+			t.Error("Invalid sql: " + sql)
+		}
+		if len(args) != 0 {
+			t.Errorf("Invalid args: %v", args)
+		}
+	})
 }
